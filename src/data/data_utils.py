@@ -56,11 +56,21 @@ def build_label_idx(insts: List[Instance]) -> Tuple[List[str], Dict[str, int]]:
 				idx2labels.append(label)
 				label2idx[label] = len(label2idx)
 
+	#Alterando manualmente. 
+	label2idx['I-MISC'] = len(label2idx)
+	idx2labels.append('I-MISC')
+	label2idx['I-LOC'] = len(label2idx)
+	idx2labels.append('I-LOC')
+
 	label2idx[START_TAG] = len(label2idx)
 	idx2labels.append(START_TAG)
 	label2idx[STOP_TAG] = len(label2idx)
 	idx2labels.append(STOP_TAG)
 	label_size = len(label2idx)
+
+	print("PRINT DE TESTE")
+	print(label2idx)
+
 	logger.info("#labels: {}".format(label_size))
 	logger.info("label 2idx: {}".format(label2idx))
 	return idx2labels, label2idx

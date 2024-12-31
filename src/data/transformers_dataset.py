@@ -115,7 +115,7 @@ class TransformersNERDataset(Dataset):
             for line in tqdm(f.readlines()):
                 line = line.rstrip()
                 if line == "":
-                    labels = convert_iobes(labels)
+                    # labels = convert_iobes(labels)
                     insts.append(Instance(words=words, ori_words=ori_words, labels=labels))
                     words = []
                     ori_words = []

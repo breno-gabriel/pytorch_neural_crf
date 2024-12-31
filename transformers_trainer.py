@@ -224,6 +224,9 @@ def main():
         conf.label2idx = train_dataset.label2idx
         conf.idx2labels = train_dataset.idx2labels
 
+        # print("PRINT DE TESTE")
+        # print(train_dataset.label2idx)
+        # print(train_dataset.idx2labels)
         dev_dataset = TransformersNERDataset(conf.dev_file, tokenizer, number=conf.dev_num, label2idx=train_dataset.label2idx, is_train=False)
         test_dataset = TransformersNERDataset(conf.test_file, tokenizer, number=conf.test_num, label2idx=train_dataset.label2idx, is_train=False)
         num_workers = 8

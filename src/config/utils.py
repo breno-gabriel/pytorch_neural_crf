@@ -49,9 +49,6 @@ def load_elmo_vec(file: str):
     return all_vecs
 
 
-
-
-
 def get_optimizer(config: Config, model: nn.Module,
                   weight_decay: float = 0.0,
                   eps: float = 1e-8,
