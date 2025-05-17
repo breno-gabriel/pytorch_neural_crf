@@ -57,22 +57,30 @@ def build_label_idx(insts: List[Instance]) -> Tuple[List[str], Dict[str, int]]:
 				label2idx[label] = len(label2idx)
 
 	#Alterando manualmente. 
-	label2idx['I-MISC'] = len(label2idx)
+	label2idx['I-MISC'] = len(label2idx) 
 	idx2labels.append('I-MISC')
-	label2idx['I-LOC'] = len(label2idx)
+	label2idx['I-LOC'] = len(label2idx) 
 	idx2labels.append('I-LOC')
 
-	label2idx[START_TAG] = len(label2idx)
+	label2idx[START_TAG] = len(label2idx) 
 	idx2labels.append(START_TAG)
-	label2idx[STOP_TAG] = len(label2idx)
+	label2idx[STOP_TAG] = len(label2idx) 
 	idx2labels.append(STOP_TAG)
 	label_size = len(label2idx)
 
+	# print("PRINT DE TESTE")
+	# print(label2idx)
+	# print(idx2labels)
+
+	# label2idx = {'<PAD>': 0, 'B-ORG': 1, 'O': 2, 'B-MISC': 3, 'B-PER': 4, 'I-PER': 5, 'B-LOC': 6, 'I-ORG': 7, 'I-MISC': 8, 'I-LOC': 9, 'I-MISC': 10, '<STOP>': 11, '<START>': 12}	
+	# idx2labels = ['<PAD>', 'B-ORG', 'O', 'B-MISC', 'B-PER', 'I-PER', 'B-LOC', 'I-ORG', 'I-MISC', 'I-LOC', 'I-MISC', 'I-LOC', 'STOP', 'START']
+
 	print("PRINT DE TESTE")
 	print(label2idx)
+	print(idx2labels)
 
-	logger.info("#labels: {}".format(label_size))
-	logger.info("label 2idx: {}".format(label2idx))
+	# logger.info("#labels: {}".format(label_size))
+	# logger.info("label 2idx: {}".format(label2idx))
 	return idx2labels, label2idx
 
 def check_all_labels_in_dict(insts: List[Instance], label2idx: Dict[str, int]):

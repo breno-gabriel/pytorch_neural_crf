@@ -50,6 +50,7 @@ def parse_arguments(parser):
     parser.add_argument('--dev_num', type=int, default=-1, help="-1 means all the data")
     parser.add_argument('--test_num', type=int, default=-1, help="-1 means all the data")
     parser.add_argument('--max_no_incre', type=int, default=100, help="early stop when there is n epoch not increasing on dev")
+    parser.add_argument('--embedder_type', type=str, default="roberta-base", help="you can use 'bert-base-uncased' and so on")
 
     ##model hyperparameter
     parser.add_argument('--model_folder', type=str, default="english_model", help="The name to save the model files")
