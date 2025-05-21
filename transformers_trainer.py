@@ -232,11 +232,13 @@ def evaluate_model(config: Config, model: TransformersCRF, data_loader: DataLoad
         fscore = sum(f1Scores) / len(f1Scores)
 
     # Retorna métricas, labels e previsões
-    return {
-        "metrics": [precision, recall, fscore],
-        "true_labels": all_true_labels,
-        "predictions": all_predictions
-    }
+    # return {
+    #     "metrics": [precision, recall, fscore],
+    #     "true_labels": all_true_labels,
+    #     "predictions": all_predictions
+    # }
+
+    return [precision, recall, fscore, all_true_labels, all_predictions]
 
 def main():
     parser = argparse.ArgumentParser(description="Transformer CRF implementation")
