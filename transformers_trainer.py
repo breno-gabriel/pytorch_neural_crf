@@ -182,6 +182,7 @@ def evaluate_model(config: Config, model: TransformersCRF, data_loader: DataLoad
     ## evaluation
     p_dict, total_predict_dict, total_entity_dict = Counter(), Counter(), Counter()
     batch_size = data_loader.batch_size
+    model.to(config.device)
     
     # Novas variáveis para armazenar labels e previsões
     all_true_labels = []
@@ -283,7 +284,13 @@ def main():
         model.eval()
         result = evaluate_model(config=saved_config, model=model, data_loader=test_dataloader, name="test mode", insts = test_dataset.insts,
                        print_each_type_metric=False)
-        print(classification_report(result["true_labels"], result["predictions"]))
+        # print(classification_report(result["true_labels"], result["predictions"]))
+        true_labels = result[3]
+        predictions = result[4]
+        true_labels = [[saved_config.idx2labels[i] for i in true_label] for true_label in true_labels]
+        predictions = [[saved_config.idx2labels[i] for i in prediction] for prediction in predictions]
+        print(classification_report(true_labels, predictions))
+
 
 
 if __name__ == "__main__":
