@@ -19,6 +19,7 @@ from src.data.data_utils import build_word_idx
 from torch.utils.data import DataLoader
 from src.config.utils import get_optimizer, lr_decay
 from src.data import Instance
+from seqeval.metrics import precision_score as seqeval_precision_score, recall_score as seqeval_recall_score, f1_score as seqeval_f1_score, classification_report as seqeval_classification_report
 
 
 def set_seed(opt, seed):
@@ -160,6 +161,8 @@ def evaluate_model(config: Config, model: NNCRF, loader: DataLoader, name: str, 
     batch_id = 0
     batch_size = loader.batch_size
     dev = config.device
+    all_true_labels = []
+    all_predictions = []
     with torch.no_grad():
         for iter, batch in tqdm(enumerate(loader, 1), desc="--evaluating batch", total=len(loader)):
             one_batch_insts = insts[batch_id * batch_size:(batch_id + 1) * batch_size]
@@ -171,6 +174,10 @@ def evaluate_model(config: Config, model: NNCRF, loader: DataLoader, name: str, 
             total_predict_dict += batch_predict
             total_entity_dict += batch_total
             batch_id += 1
+            # Coletar labels e previsões para seqeval
+            for inst in one_batch_insts:
+                all_true_labels.append(inst.labels)
+                all_predictions.append(inst.prediction)
     if print_each_type_metric:
         for key in total_entity_dict:
             precision_key, recall_key, fscore_key = get_metric(p_dict[key], total_entity_dict[key], total_predict_dict[key])
@@ -182,6 +189,13 @@ def evaluate_model(config: Config, model: NNCRF, loader: DataLoader, name: str, 
     precision, recall, fscore = get_metric(total_p, total_entity, total_predict)
     print(colored(f"[{name} set Total] Prec.: {precision:.2f}, Rec.: {recall:.2f}, F1: {fscore:.2f}", 'blue'), flush=True)
 
+    # seqeval metrics
+    seqeval_precision = seqeval_precision_score(all_true_labels, all_predictions) * 100
+    seqeval_recall = seqeval_recall_score(all_true_labels, all_predictions) * 100
+    seqeval_f1 = seqeval_f1_score(all_true_labels, all_predictions) * 100
+    print(colored(f"[{name} set SeqEval] Prec.: {seqeval_precision:.2f}, Rec.: {seqeval_recall:.2f}, F1: {seqeval_f1:.2f}", 'green'), flush=True)
+    if print_each_type_metric:
+        print(seqeval_classification_report(all_true_labels, all_predictions, digits=2))
 
     return [precision, recall, fscore]
 
