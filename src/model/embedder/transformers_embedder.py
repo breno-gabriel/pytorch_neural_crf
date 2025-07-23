@@ -42,7 +42,8 @@ class TransformersEmbedder(nn.Module):
         :param attention_mask: (batch_size x max_wordpiece_len)
         :return:
         """
-        subword_rep = self.model(**{"input_ids": subword_input_ids, "attention_mask": attention_mask}).last_hidden_state
+        outputs = self.model(input_ids=subword_input_ids, attention_mask=attention_mask)
+        subword_rep = outputs.last_hidden_state
         batch_size, _, rep_size = subword_rep.size()
         _, max_sent_len = orig_to_token_index.size()
         word_rep =  torch.gather(subword_rep[:, :, :], 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
