@@ -32,17 +32,19 @@ class TransformersEmbedder(nn.Module):
         ## But you can directly write it as 768 as well.
         return self.model.config.hidden_size
 
-    def forward(self,
-                subword_input_ids: torch.Tensor,
-                orig_to_token_index: torch.LongTensor,
+    def forward(self, subword_input_ids: torch.Tensor,
+                orig_to_token_index: torch.LongTensor,  ## batch_size * max_seq_leng
                 attention_mask: torch.LongTensor) -> torch.Tensor:
+        """
 
-        # CHAMADA 100% SEGURA
-        outputs = self.model(input_ids=subword_input_ids, attention_mask=attention_mask)
-        subword_rep = outputs.last_hidden_state
-
+        :param subword_input_ids: (batch_size x max_wordpiece_len x hidden_size) the input id tensor
+        :param orig_to_token_index: (batch_size x max_sent_len x hidden_size) the mapping from original word id map to subword token index
+        :param attention_mask: (batch_size x max_wordpiece_len)
+        :return:
+        """
+        subword_rep = self.model(**{"input_ids": subword_input_ids, "attention_mask": attention_mask}).last_hidden_state
         batch_size, _, rep_size = subword_rep.size()
         _, max_sent_len = orig_to_token_index.size()
-        word_rep = torch.gather(subword_rep, 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
+        # select the word index.
+        word_rep =  torch.gather(subword_rep[:, :, :], 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
         return word_rep
-
