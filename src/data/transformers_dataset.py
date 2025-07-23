@@ -34,7 +34,12 @@ def convert_instances_to_feature_tensors(instances: List[Instance],
     for idx, inst in enumerate(instances):
         words = inst.ori_words
         orig_to_tok_index = []
-        res = tokenizer.encode_plus(words, is_split_into_words=True)
+        res = tokenizer.encode_plus(
+            words,
+            is_split_into_words=True,
+            max_length=tokenizer.model_max_length,
+            truncation=True
+        )
         subword_idx2word_idx = res.word_ids(batch_index=0)
         prev_word_idx = -1
         for i, mapped_word_idx in enumerate(subword_idx2word_idx):
