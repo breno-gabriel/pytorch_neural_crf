@@ -46,5 +46,8 @@ class TransformersEmbedder(nn.Module):
         batch_size, _, rep_size = subword_rep.size()
         _, max_sent_len = orig_to_token_index.size()
         # select the word index.
+        print("batch_size", batch_size)
+        print("max_sent_len", max_sent_len)
+        print("rep_size", rep_size)
         word_rep =  torch.gather(subword_rep[:, :, :], 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
         return word_rep
