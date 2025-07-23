@@ -37,7 +37,7 @@ def convert_instances_to_feature_tensors(instances: List[Instance],
         res = tokenizer.encode_plus(
             words,
             is_split_into_words=True,
-            max_length=tokenizer.model_max_length,
+            max_length=512,
             truncation=True
         )
         subword_idx2word_idx = res.word_ids(batch_index=0)
