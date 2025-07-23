@@ -219,8 +219,8 @@ def main():
         conf = Config(opt)
         logger.info(f"[Data Info] Tokenizing the instances using '{conf.embedder_type}' tokenizer")
         tokenizer = AutoTokenizer.from_pretrained(conf.embedder_type, add_prefix_space=True, use_fast=True)
-        print("Tokenizer Max length")
-        print(tokenizer.model_max_length)
+        logger.info("Tokenizer Max length")
+        logger.info(tokenizer.model_max_length)
         logger.info(f"[Data Info] Reading dataset from: \n{conf.train_file}\n{conf.dev_file}\n{conf.test_file}")
         train_dataset = TransformersNERDataset(conf.train_file, tokenizer, number=conf.train_num, is_train=True)
         conf.label2idx = train_dataset.label2idx
