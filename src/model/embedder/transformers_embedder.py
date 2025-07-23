@@ -33,15 +33,16 @@ class TransformersEmbedder(nn.Module):
         return self.model.config.hidden_size
 
     def forward(self,
-            subword_input_ids: torch.Tensor,
-            orig_to_token_index: torch.LongTensor,
-            attention_mask: torch.LongTensor) -> torch.Tensor:
+                subword_input_ids: torch.Tensor,
+                orig_to_token_index: torch.LongTensor,
+                attention_mask: torch.LongTensor) -> torch.Tensor:
 
-    # CHAMADA 100% SEGURA
-    outputs = self.model(input_ids=subword_input_ids, attention_mask=attention_mask)
-    subword_rep = outputs.last_hidden_state
+        # CHAMADA 100% SEGURA
+        outputs = self.model(input_ids=subword_input_ids, attention_mask=attention_mask)
+        subword_rep = outputs.last_hidden_state
 
-    batch_size, _, rep_size = subword_rep.size()
-    _, max_sent_len = orig_to_token_index.size()
-    word_rep = torch.gather(subword_rep, 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
-    return word_rep
+        batch_size, _, rep_size = subword_rep.size()
+        _, max_sent_len = orig_to_token_index.size()
+        word_rep = torch.gather(subword_rep, 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
+        return word_rep
+
