@@ -16,7 +16,6 @@ from src.data import TransformersNERDataset
 from torch.utils.data import DataLoader
 from transformers import set_seed, AutoTokenizer
 import logging
-from seqeval.metrics import f1_score, classification_report
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -117,8 +116,6 @@ def train_model(config: Config, epoch: int, train_loader: DataLoader, dev_loader
                              orig_to_tok_index = batch.orig_to_tok_index.to(config.device),
                              attention_mask = batch.attention_mask.to(config.device),
                              labels = batch.label_ids.to(config.device))
-            # print("VERIFICANDO VALOR LOSS")
-            # print(loss)
             epoch_loss += loss.item()
             if config.fp16:
                 scaler.scale(loss).backward()
@@ -139,8 +136,6 @@ def train_model(config: Config, epoch: int, train_loader: DataLoader, dev_loader
         logger.info(f"Epoch {i}: {epoch_loss:.5f}, Time is {(end_time - start_time):.2f}s")
 
         model.eval()
-        # print("EVALLLLLLLLLLLLLLLLLLLLLLL")
-        # print(model.eval())
         dev_metrics = evaluate_model(config, model, dev_loader, "dev", dev_loader.dataset.insts)
         test_metrics = evaluate_model(config, model, test_loader, "test", test_loader.dataset.insts)
         if dev_metrics[2] > best_dev[0]:
@@ -182,38 +177,19 @@ def evaluate_model(config: Config, model: TransformersCRF, data_loader: DataLoad
     ## evaluation
     p_dict, total_predict_dict, total_entity_dict = Counter(), Counter(), Counter()
     batch_size = data_loader.batch_size
-    model.to(config.device)
-    
-    # Novas variáveis para armazenar labels e previsões
-    all_true_labels = []
-    all_predictions = []
-    
     with torch.no_grad(), torch.cuda.amp.autocast(enabled=bool(config.fp16)):
         for batch_id, batch in tqdm(enumerate(data_loader, 0), desc="--evaluating batch", total=len(data_loader)):
             one_batch_insts = insts[batch_id * batch_size:(batch_id + 1) * batch_size]
-            batch_max_scores, batch_max_ids = model(
-                subword_input_ids=batch.input_ids.to(config.device),
-                word_seq_lens=batch.word_seq_len.to(config.device),
-                orig_to_tok_index=batch.orig_to_tok_index.to(config.device),
-                attention_mask=batch.attention_mask.to(config.device),
-                is_train=False
-            )
-            
-            # Extrai labels e previsões do batch
-            batch_p, batch_predict, batch_total = evaluate_batch_insts(
-                one_batch_insts, batch_max_ids, batch.label_ids, batch.word_seq_len, config.idx2labels
-            )
-            
-            # Guarda as labels e previsões
-            all_true_labels.extend(batch.label_ids.cpu().numpy().tolist())  # Converte para lista
-            all_predictions.extend(batch_max_ids.cpu().numpy().tolist())    # Converte para lista
-            
+            batch_max_scores, batch_max_ids = model(subword_input_ids= batch.input_ids.to(config.device),
+                                                    word_seq_lens = batch.word_seq_len.to(config.device),
+                                                    orig_to_tok_index = batch.orig_to_tok_index.to(config.device),
+                                                    attention_mask = batch.attention_mask.to(config.device),
+                                                    is_train=False)
+            batch_p , batch_predict, batch_total = evaluate_batch_insts(one_batch_insts, batch_max_ids, batch.label_ids, batch.word_seq_len, config.idx2labels)
             p_dict += batch_p
             total_predict_dict += batch_predict
             total_entity_dict += batch_total
             batch_id += 1
-
-    # Cálculo das métricas (como antes)
     f1Scores = []
     if print_each_type_metric or config.print_detail_f1 or (config.earlystop_atr == "macro"):
         for key in total_entity_dict:
@@ -232,14 +208,8 @@ def evaluate_model(config: Config, model: TransformersCRF, data_loader: DataLoad
     if config.earlystop_atr == "macro" and len(f1Scores) > 0:
         fscore = sum(f1Scores) / len(f1Scores)
 
-    # Retorna métricas, labels e previsões
-    # return {
-    #     "metrics": [precision, recall, fscore],
-    #     "true_labels": all_true_labels,
-    #     "predictions": all_predictions
-    # }
+    return [precision, recall, fscore]
 
-    return [precision, recall, fscore, all_true_labels, all_predictions]
 
 def main():
     parser = argparse.ArgumentParser(description="Transformer CRF implementation")
@@ -254,6 +224,9 @@ def main():
         conf.label2idx = train_dataset.label2idx
         conf.idx2labels = train_dataset.idx2labels
 
+        # print("PRINT DE TESTE")
+        # print(train_dataset.label2idx)
+        # print(train_dataset.idx2labels)
         dev_dataset = TransformersNERDataset(conf.dev_file, tokenizer, number=conf.dev_num, label2idx=train_dataset.label2idx, is_train=False)
         test_dataset = TransformersNERDataset(conf.test_file, tokenizer, number=conf.test_num, label2idx=train_dataset.label2idx, is_train=False)
         num_workers = 8
@@ -282,15 +255,8 @@ def main():
         model = TransformersCRF(saved_config)
         model.load_state_dict(torch.load(f"{folder_name}/lstm_crf.m", map_location=device))
         model.eval()
-        result = evaluate_model(config=saved_config, model=model, data_loader=test_dataloader, name="test mode", insts = test_dataset.insts,
+        evaluate_model(config=saved_config, model=model, data_loader=test_dataloader, name="test mode", insts = test_dataset.insts,
                        print_each_type_metric=False)
-        # print(classification_report(result["true_labels"], result["predictions"]))
-        true_labels = result[3]
-        predictions = result[4]
-        true_labels = [[saved_config.idx2labels[i] for i in true_label] for true_label in true_labels]
-        predictions = [[saved_config.idx2labels[i] for i in prediction] for prediction in predictions]
-        print(classification_report(true_labels, predictions))
-
 
 
 if __name__ == "__main__":
