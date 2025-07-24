@@ -37,14 +37,20 @@ class TransformersEmbedder(nn.Module):
                 attention_mask: torch.LongTensor) -> torch.Tensor:
         """
 
-        :param subword_input_ids: (batch_size x max_wordpiece_len x hidden_size) the input id tensor
-        :param orig_to_token_index: (batch_size x max_sent_len x hidden_size) the mapping from original word id map to subword token index
+        :param subword_input_ids: (batch_size x max_wordpiece_len) the input id tensor
+        :param orig_to_token_index: (batch_size x max_sent_len) the mapping from original word id map to subword token index
         :param attention_mask: (batch_size x max_wordpiece_len)
         :return:
         """
-        subword_rep = self.model(**{"input_ids": subword_input_ids, "attention_mask": attention_mask}).last_hidden_state
+        # For RoBERTa, we need to explicitly set token_type_ids to None
+        model_inputs = {
+            "input_ids": subword_input_ids,
+            "attention_mask": attention_mask,
+            "token_type_ids": None  # This is important for RoBERTa
+        }
+        subword_rep = self.model(**model_inputs).last_hidden_state
         batch_size, _, rep_size = subword_rep.size()
         _, max_sent_len = orig_to_token_index.size()
         # select the word index.
-        word_rep =  torch.gather(subword_rep[:, :, :], 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
+        word_rep = torch.gather(subword_rep, 1, orig_to_token_index.unsqueeze(-1).expand(batch_size, max_sent_len, rep_size))
         return word_rep
